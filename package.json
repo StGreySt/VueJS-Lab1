@@ -9,10 +9,11 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@unhead/vue": "^1.11.6",
     "formik": "^2.4.6",
     "vee-validate": "^4.13.2",
     "vue": "^3.4.37",
-    "vue-recaptcha-v3": "^2.0.1",
+    "vue-recaptcha": "^3.0.0-alpha.6",
     "yup": "^1.4.0"
   },
   "devDependencies": {

@@ -9,7 +9,8 @@ import RadioGroup from '../components/RadioGroup.vue';
 import FileUpload from '../components/FileUpload.vue';
 import WorkExperience from '../components/WorkExperience.vue';
 import ProjectField from '../components/ProjectField.vue';
-import { VueRecaptchaV2 } from 'vue-recaptcha-v3';
+
+const recaptchaSiteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY;
 
 // Список дозволених країн для поля державність
 const allowedCountries = ['Україна', 'США', 'Канада', 'Німеччина', 'Індія'];
@@ -128,7 +129,7 @@ const formSchema = yup.object({
 });
 
 // Підключаємо useForm
-const { handleSubmit } = useForm({
+const { handleSubmit, setFieldValue } = useForm({
   validationSchema: formSchema,
 });
 
@@ -166,9 +167,26 @@ const { value: githubProfile, errorMessage: githubProfileError } = useField('git
 const { value: facebookProfile, errorMessage: facebookProfileError } = useField('facebookProfile');
 const { value: otherProfiles, errorMessage: otherProfilesError } = useField('otherProfiles');
 
-const submitForm = handleSubmit((values) => {
-  console.log('Form submitted:', values);
+
+const submitForm = handleSubmit(async (values) => {
+  try {
+    const token = await executeRecaptcha('form_submission');
+    setFieldValue('recaptcha', token);
+    console.log('Form submitted with values:', values);
+  } catch (error) {
+    console.error('reCAPTCHA verification failed', error);
+  }
 });
+
+const onCaptchaExpired = () => {
+  console.log('reCAPTCHA закінчилася, будь ласка, перевірте знову.');
+};
+
+const onCaptchaVerified = (token) => {
+  console.log('Токен:', token);
+  setFieldValue('recaptcha', token);
+  console.log('reCAPTCHA пройдена з токеном:', token);
+}
 
 const updatePhoto = (files) => {
   form.value.photo = files;
@@ -190,9 +208,6 @@ const updatePortfolio = (files) => {
   form.value.portfolio = files;
 };
 
-const onVerify = (response) => {
-  console.log('Recaptcha verified:', response);
-};
 </script>
 
 <template>
@@ -255,7 +270,8 @@ const onVerify = (response) => {
     <InputField :modelValue="otherProfiles" label="Інші професійні профілі" id="otherProfiles" :error="otherProfilesError" @update:modelValue="otherProfiles = $event" />
 
     <!-- Захист від ботів -->
-    <vue-recaptcha-v2 sitekey="your-site-key" @verify="onVerify" />
+    <div class="g-recaptcha" :data-sitekey="recaptchaSiteKey" style="display: block; height: 80px;"></div>
+
 
     <button type="submit" class="btn-primary">Надіслати</button>
   </form>
